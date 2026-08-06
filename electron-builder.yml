@@ -2,6 +2,7 @@ appId: com.paulkoepke.claude-usage-tray
 productName: Claude Usage Tray
 directories:
   output: dist
+publish: never
 files:
   - out/**/*
   - resources/**/*

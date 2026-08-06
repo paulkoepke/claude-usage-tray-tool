@@ -6,6 +6,10 @@
   "author": "Paul Köpke",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paulkoepke/claude-usage-tray"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
