@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs'
 import { createCanvas, loadImage } from '@napi-rs/canvas'
 import { nativeImage, type NativeImage } from 'electron'
 import trayMascotAsset from '../../resources/tray-mascot.png?asset'
@@ -17,7 +18,11 @@ let mascotImagePromise: Promise<MascotImage> | null = null
 
 function getMascotImage(): Promise<MascotImage> {
   if (!mascotImagePromise) {
-    mascotImagePromise = loadImage(trayMascotAsset)
+    // Pass raw bytes, not the path: @napi-rs/canvas opens path strings natively,
+    // bypassing Electron's asar-aware fs — which fails for the packaged app since
+    // that path points inside app.asar. Reading via fs first goes through
+    // Electron's fs patch, which transparently resolves the unpacked file.
+    mascotImagePromise = loadImage(readFileSync(trayMascotAsset))
   }
   return mascotImagePromise
 }

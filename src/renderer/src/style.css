@@ -51,11 +51,15 @@ body {
   position: absolute;
   top: -9px;
   left: 12px;
+  max-width: calc(100% - 60px);
   padding: 0 6px;
   background: #17171a;
   color: #d97757;
   font-weight: 600;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .term-close {

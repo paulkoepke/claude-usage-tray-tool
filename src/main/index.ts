@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { app, BrowserWindow, ipcMain, Menu, Tray, screen } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, screen } from 'electron'
 import { readOAuthToken } from './token'
 import { fetchUsage } from './usage'
 import { renderProgressIcon } from './icon'
@@ -25,7 +25,7 @@ async function poll(): Promise<void> {
   try {
     const token = await readOAuthToken()
     if (!token) {
-      tray.setToolTip('Claude Usage: no token found')
+      tray.setToolTip('Usage Tray Tool for Claude: no token found')
       return
     }
 
@@ -93,6 +93,15 @@ function getPopupPosition(): { x: number; y: number } {
   return { x, y }
 }
 
+function showPopup(): void {
+  if (!popup) return
+
+  const { x, y } = getPopupPosition()
+  popup.setPosition(x, y, false)
+  popup.show()
+  popup.focus()
+}
+
 function togglePopup(): void {
   if (!popup) return
 
@@ -101,10 +110,7 @@ function togglePopup(): void {
     return
   }
 
-  const { x, y } = getPopupPosition()
-  popup.setPosition(x, y, false)
-  popup.show()
-  popup.focus()
+  showPopup()
 }
 
 async function createTray(): Promise<void> {
@@ -121,21 +127,31 @@ async function createTray(): Promise<void> {
   tray.setContextMenu(contextMenu)
 }
 
-app.whenReady().then(async () => {
-  ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
-  ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => showPopup())
 
-  await createTray()
-  popup = createPopup()
+  app.whenReady().then(async () => {
+    ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
+    ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
 
-  void poll()
-  pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
-})
+    await createTray()
+    popup = createPopup()
+    popup.once('ready-to-show', () => showPopup())
 
-app.on('window-all-closed', () => {
-  // Tray-only app: don't quit when the popup is closed/hidden.
-})
+    void poll()
+    pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
+  }).catch((err) => {
+    dialog.showErrorBox('Usage Tray Tool for Claude — startup failed', (err as Error).stack ?? String(err))
+    app.quit()
+  })
 
-app.on('before-quit', () => {
-  if (pollTimer) clearInterval(pollTimer)
-})
+  app.on('window-all-closed', () => {
+    // Tray-only app: don't quit when the popup is closed/hidden.
+  })
+
+  app.on('before-quit', () => {
+    if (pollTimer) clearInterval(pollTimer)
+  })
+}

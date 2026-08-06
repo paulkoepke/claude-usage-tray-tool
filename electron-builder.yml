@@ -1,16 +1,24 @@
 appId: com.paulkoepke.claude-usage-tray
-productName: Claude Usage Tray
+productName: Usage Tray Tool for Claude
 directories:
   output: dist
 files:
   - out/**/*
   - resources/**/*
   - package.json
+  - node_modules/@napi-rs/canvas/**/*
+  - node_modules/@napi-rs/canvas-win32-x64-msvc/**/*
 asarUnpack:
   - resources/**/*
+  - node_modules/@napi-rs/canvas/**/*
+  - node_modules/@napi-rs/canvas-win32-x64-msvc/**/*
 win:
-  target: nsis
+  target:
+    - nsis
+    - portable
   icon: build/icon.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
