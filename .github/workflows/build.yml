@@ -3,6 +3,10 @@ name: Build & Release
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'screenshots/**'
+      - 'LICENSE'
 
 permissions:
   contents: write
