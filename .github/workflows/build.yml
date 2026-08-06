@@ -67,10 +67,19 @@ jobs:
           path: dist/*.exe
           if-no-files-found: error
 
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v4
+        id: changelog
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.bump.outputs.version }}
           name: v${{ steps.bump.outputs.version }}
-          generate_release_notes: true
+          body_path: CHANGES.md
           files: dist/*.exe
