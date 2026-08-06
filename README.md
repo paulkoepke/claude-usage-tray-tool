@@ -20,6 +20,18 @@ opens a small always-on-top widget with the detailed usage breakdown.
 > your own existing credentials; nothing is collected, logged, or shared
 > by the project itself.
 
+## Installation
+
+Grab the latest build from [GitHub Releases](https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest):
+
+- **Installer** (`...Setup*.exe`) — installs the app and adds it to your
+  Start menu, with an uninstaller.
+- **Portable** (`...portable.exe`) — a single, standalone exe. No
+  installation, just download and run.
+
+Windows SmartScreen may warn about the app since it isn't code-signed
+with a paid certificate — click "More info" → "Run anyway" to launch it.
+
 ## Features
 
 - **Tray icon**: shows usage as a ring/bar (32x32), color-coded by
