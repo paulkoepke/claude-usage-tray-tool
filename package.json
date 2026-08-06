@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-tray",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Windows tray app that displays Claude.ai / Claude Code usage",
   "main": "./out/main/index.js",
   "author": "Paul Köpke",
