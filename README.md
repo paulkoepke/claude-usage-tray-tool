@@ -40,6 +40,11 @@ with a paid certificate — click "More info" → "Run anyway" to launch it.
   window with two progress bars (5h / 7d), percentage, and reset time
 - **Context menu** (right-click): "Refresh now", "Show/Hide", "Quit"
 - Polls usage data automatically every 180 seconds
+- **Auto-updates** (installer version only): checks GitHub Releases on
+  startup, downloads updates in the background, and installs them on the
+  next restart — no manual re-download needed. The portable exe doesn't
+  auto-update, but shows a "New version available!" item in the tray's
+  right-click menu — click it to open the releases page.
 
 ## Tech stack
 

@@ -6,8 +6,7 @@ files:
   - out/**/*
   - resources/**/*
   - package.json
-  - node_modules/@napi-rs/canvas/**/*
-  - node_modules/@napi-rs/canvas-win32-x64-msvc/**/*
+  - node_modules/**/*
 asarUnpack:
   - resources/**/*
   - node_modules/@napi-rs/canvas/**/*
@@ -22,3 +21,7 @@ nsis:
   allowToChangeInstallationDirectory: true
 portable:
   artifactName: ${productName}-${version}-portable.${ext}
+publish:
+  provider: github
+  owner: paulkoepke
+  repo: claude-usage-tray-tool

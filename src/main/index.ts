@@ -1,5 +1,6 @@
 import { join } from 'path'
-import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, screen } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell, Tray, screen } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { readOAuthToken } from './token'
 import { fetchUsage } from './usage'
 import { renderProgressIcon } from './icon'
@@ -14,11 +15,13 @@ import {
 const POLL_INTERVAL_MS = 180_000
 const POPUP_WIDTH = 280 + 32 // card width + window padding
 const POPUP_HEIGHT = 300
+const RELEASES_URL = 'https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest'
 
 let tray: Tray | null = null
 let popup: BrowserWindow | null = null
 let pollTimer: NodeJS.Timeout | null = null
 let lastUsage: UsageState | null = null
+let updateAvailableVersion: string | null = null
 
 async function poll(): Promise<void> {
   if (!tray) return
@@ -123,6 +126,12 @@ function buildContextMenu(): Menu {
   const autostartEnabled = app.getLoginItemSettings().openAtLogin
 
   return Menu.buildFromTemplate([
+    ...(updateAvailableVersion
+      ? [
+          { label: 'New version available!', click: () => shell.openExternal(RELEASES_URL) },
+          { type: 'separator' as const }
+        ]
+      : []),
     { label: 'Refresh now', click: () => void poll() },
     { label: 'Show/Hide', click: () => togglePopup() },
     { type: 'separator' },
@@ -163,6 +172,21 @@ if (!app.requestSingleInstanceLock()) {
 
     void poll()
     pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
+
+    if (app.isPackaged) {
+      const isPortable = !!process.env.PORTABLE_EXECUTABLE_FILE
+      autoUpdater.autoDownload = !isPortable
+
+      autoUpdater.on('update-available', (info) => {
+        if (!isPortable) return
+        updateAvailableVersion = info.version
+        tray?.setContextMenu(buildContextMenu())
+      })
+
+      autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+        console.error('Auto-update check failed:', err)
+      })
+    }
   }).catch((err) => {
     dialog.showErrorBox('Usage Tray Tool for Claude — startup failed', (err as Error).stack ?? String(err))
     app.quit()

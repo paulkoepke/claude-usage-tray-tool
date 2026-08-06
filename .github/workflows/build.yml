@@ -90,4 +90,6 @@ jobs:
           tag_name: v${{ steps.bump.outputs.version }}
           name: v${{ steps.bump.outputs.version }}
           body_path: CHANGES.md
-          files: dist/*.exe
+          files: |
+            dist/*.exe
+            dist/latest.yml
