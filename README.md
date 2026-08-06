@@ -36,6 +36,10 @@ opens a small always-on-top widget with the detailed usage breakdown.
 - Renderer: vanilla TypeScript (no framework), talks to the main process
   via `contextBridge` / IPC
 
+**Why Electron for a tray icon?** Yes, it's overkill — a hundred MB of RAM and
+a Chromium process for something that could be a native tray app. It's
+not the lightest choice, but it was the most fun for me to build, and it’s just a hobby project.
+
 ## Data source
 
 The app calls an **undocumented, internal Anthropic endpoint** (not an
