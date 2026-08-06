@@ -57,6 +57,7 @@ function createPopup(): BrowserWindow {
     movable: true,
     transparent: true,
     backgroundColor: '#00000000',
+    hasShadow: false,
     skipTaskbar: true,
     alwaysOnTop: true,
     webPreferences: {
