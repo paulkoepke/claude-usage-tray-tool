@@ -4,13 +4,13 @@ import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
   POPUP_CLOSE_CHANNEL,
-  type UsageResponse
+  type UsageState
 } from '../shared/types'
 
 const api = {
-  getUsage: (): Promise<UsageResponse | null> => ipcRenderer.invoke(USAGE_GET_CHANNEL),
-  onUsageUpdated: (callback: (usage: UsageResponse) => void): (() => void) => {
-    const listener = (_event: IpcRendererEvent, usage: UsageResponse): void => callback(usage)
+  getUsage: (): Promise<UsageState | null> => ipcRenderer.invoke(USAGE_GET_CHANNEL),
+  onUsageUpdated: (callback: (state: UsageState) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, state: UsageState): void => callback(state)
     ipcRenderer.on(USAGE_UPDATED_CHANNEL, listener)
     return () => ipcRenderer.removeListener(USAGE_UPDATED_CHANNEL, listener)
   },

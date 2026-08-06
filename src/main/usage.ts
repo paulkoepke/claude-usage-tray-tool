@@ -19,8 +19,12 @@ export async function fetchUsage(accessToken: string): Promise<UsageResponse> {
   }
 
   const data = (await res.json()) as {
-    five_hour: { utilization: number; resets_at: string }
-    seven_day: { utilization: number; resets_at: string }
+    five_hour?: { utilization: number; resets_at: string }
+    seven_day?: { utilization: number; resets_at: string }
+  }
+
+  if (!data.five_hour || !data.seven_day) {
+    throw new Error('Unexpected response from usage endpoint')
   }
 
   return {

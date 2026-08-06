@@ -1,20 +1,7 @@
 import './style.css'
-import type { UsageResponse, UsageWindow } from '../../shared/types'
+import type { UsageState, UsageWindow } from '../../shared/types'
 
 const BAR_WIDTH = 16
-
-// Terminal mascot in block characters — only shown during UI development,
-// until real data arrives from the main process (see readOAuthToken()).
-const MOCK_USAGE: UsageResponse = {
-  fiveHour: {
-    utilization: 42,
-    resetsAt: new Date(Date.now() + 2 * 60 * 60 * 1000 + 14 * 60 * 1000).toISOString()
-  },
-  sevenDay: {
-    utilization: 71,
-    resetsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-  }
-}
 
 const MASCOT = ['▐▛███▜▌', '▝▜█████▛▘', '▘▘ ▝▝'].join('\n')
 
@@ -102,31 +89,41 @@ function renderMetric(groupId: string, data: UsageWindow): void {
   if (sub) sub.textContent = `reset ${formatResetTime(data.resetsAt)}`
 }
 
-function renderUsage(usage: UsageResponse, statusText: string): void {
-  renderMetric('metric-5h', usage.fiveHour)
-  renderMetric('metric-7d', usage.sevenDay)
-  setStatus(statusText)
+function setStatus(text: string, isError: boolean): void {
+  const status = document.getElementById('status')
+  if (!status) return
+  status.textContent = text
+  status.classList.toggle('is-error', isError)
 }
 
-function setStatus(text: string): void {
-  const status = document.getElementById('status')
-  if (status) status.textContent = text
+function setStale(stale: boolean): void {
+  document.getElementById('metric-5h')?.classList.toggle('is-stale', stale)
+  document.getElementById('metric-7d')?.classList.toggle('is-stale', stale)
+}
+
+function applyState(state: UsageState): void {
+  if (state.status === 'error') {
+    setStatus(state.message, true)
+    setStale(true)
+    return
+  }
+
+  renderMetric('metric-5h', state.usage.fiveHour)
+  renderMetric('metric-7d', state.usage.sevenDay)
+  setStale(false)
+  setStatus(`updated ${new Date().toLocaleTimeString('en-US')}`, false)
 }
 
 async function init(): Promise<void> {
-  renderUsage(MOCK_USAGE, 'mock data · backend pending')
-
   try {
-    const usage = await window.claudeUsage.getUsage()
-    if (usage) renderUsage(usage, `updated ${new Date().toLocaleTimeString('en-US')}`)
+    const state = await window.claudeUsage.getUsage()
+    if (state) applyState(state)
   } catch (err) {
-    setStatus(`error: ${(err as Error).message}`)
+    setStatus((err as Error).message, true)
   }
 }
 
-window.claudeUsage.onUsageUpdated((usage) =>
-  renderUsage(usage, `updated ${new Date().toLocaleTimeString('en-US')}`)
-)
+window.claudeUsage.onUsageUpdated((state) => applyState(state))
 
 document.getElementById('close-btn')?.addEventListener('click', () => {
   window.claudeUsage.closePopup()

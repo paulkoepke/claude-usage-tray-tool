@@ -159,3 +159,12 @@ body {
   color: #5f5f68;
   text-align: right;
 }
+
+.term-status.is-error {
+  color: #e5484d;
+  text-align: left;
+}
+
+.metric.is-stale {
+  opacity: 0.4;
+}

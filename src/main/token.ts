@@ -26,7 +26,14 @@ export async function readOAuthToken(): Promise<string | null> {
     throw err
   }
 
-  const oauth = (JSON.parse(raw) as StoredCredentials).claudeAiOauth
+  let credentials: StoredCredentials
+  try {
+    credentials = JSON.parse(raw) as StoredCredentials
+  } catch {
+    throw new Error('Credentials file is corrupted — sign in again in Claude Code')
+  }
+
+  const oauth = credentials.claudeAiOauth
   if (!oauth?.accessToken) return null
 
   if (oauth.expiresAt && oauth.expiresAt < Date.now()) {

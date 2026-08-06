@@ -7,7 +7,7 @@ import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
   POPUP_CLOSE_CHANNEL,
-  type UsageResponse
+  type UsageState
 } from '../shared/types'
 
 const POLL_INTERVAL_MS = 180_000
@@ -17,30 +17,34 @@ const POPUP_HEIGHT = 300
 let tray: Tray | null = null
 let popup: BrowserWindow | null = null
 let pollTimer: NodeJS.Timeout | null = null
-let lastUsage: UsageResponse | null = null
+let lastUsage: UsageState | null = null
 
 async function poll(): Promise<void> {
   if (!tray) return
 
+  let state: UsageState
   try {
     const token = await readOAuthToken()
-    if (!token) {
-      tray.setToolTip('Usage Tray Tool for Claude: no token found')
-      return
-    }
+    state = token
+      ? { status: 'ok', usage: await fetchUsage(token) }
+      : { status: 'error', message: 'No Claude Code login found — sign in via Claude Code first' }
+  } catch (err) {
+    state = { status: 'error', message: (err as Error).message }
+  }
 
-    const usage = await fetchUsage(token)
-    lastUsage = usage
-    const percent = Math.max(usage.fiveHour.utilization, usage.sevenDay.utilization)
+  lastUsage = state
 
+  if (state.status === 'ok') {
+    const percent = Math.max(state.usage.fiveHour.utilization, state.usage.sevenDay.utilization)
     tray.setImage(await renderProgressIcon(percent))
     tray.setToolTip(
-      `Claude Usage\n5h: ${usage.fiveHour.utilization.toFixed(0)}%\n7d: ${usage.sevenDay.utilization.toFixed(0)}%`
+      `Claude Usage\n5h: ${state.usage.fiveHour.utilization.toFixed(0)}%\n7d: ${state.usage.sevenDay.utilization.toFixed(0)}%`
     )
-    popup?.webContents.send(USAGE_UPDATED_CHANNEL, usage)
-  } catch (err) {
-    tray.setToolTip(`Claude Usage: fetch failed (${(err as Error).message})`)
+  } else {
+    tray.setToolTip(`Claude Usage: ${state.message}`)
   }
+
+  popup?.webContents.send(USAGE_UPDATED_CHANNEL, state)
 }
 
 function createPopup(): BrowserWindow {
