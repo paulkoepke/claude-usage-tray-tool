@@ -1,0 +1,16 @@
+appId: com.paulkoepke.claude-usage-tray
+productName: Claude Usage Tray
+directories:
+  output: dist
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+asarUnpack:
+  - resources/**/*
+win:
+  target: nsis
+  icon: build/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

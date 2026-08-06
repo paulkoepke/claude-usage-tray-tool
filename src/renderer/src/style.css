@@ -1,0 +1,157 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  padding: 16px;
+  font-family:
+    'Cascadia Code',
+    'Cascadia Mono',
+    Consolas,
+    'JetBrains Mono',
+    'Courier New',
+    monospace;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.terminal {
+  position: relative;
+  width: 100%;
+  padding: 14px 16px 12px;
+  background: #17171a;
+  border: 1px solid #d97757;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: #e6e6e6;
+  font-size: 12px;
+}
+
+.term-drag {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  right: 0;
+  height: 22px;
+  -webkit-app-region: drag;
+}
+
+.term-title {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  padding: 0 6px;
+  background: #17171a;
+  color: #d97757;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.term-close {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  padding: 0 4px;
+  background: #17171a;
+  color: #5f5f68;
+  font: inherit;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.term-close:hover {
+  color: #e5484d;
+}
+
+.mascot {
+  margin: 4px 0 12px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 15px;
+  color: #d97757;
+  white-space: pre;
+}
+
+.metric {
+  margin-bottom: 10px;
+}
+
+.metric:last-of-type {
+  margin-bottom: 6px;
+}
+
+.metric-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.metric-label {
+  width: 2ch;
+  flex-shrink: 0;
+  color: #8a8a92;
+}
+
+.metric-bar {
+  flex: 1;
+  white-space: pre;
+  letter-spacing: -0.5px;
+}
+
+.metric-bar .bracket {
+  color: #5f5f68;
+}
+
+.metric-bar .empty {
+  color: #3a3a40;
+}
+
+.fill.level-low,
+.metric-pct.level-low {
+  color: #30a46c;
+}
+
+.fill.level-mid,
+.metric-pct.level-mid {
+  color: #f5a623;
+}
+
+.fill.level-high,
+.metric-pct.level-high {
+  color: #e5484d;
+}
+
+.metric-pct {
+  width: 3.5ch;
+  text-align: right;
+  font-weight: 600;
+}
+
+.metric-sub {
+  margin-top: 2px;
+  margin-left: calc(2ch + 8px);
+  font-size: 10.5px;
+  color: #5f5f68;
+}
+
+.term-status {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #2a2a2e;
+  font-size: 10.5px;
+  color: #5f5f68;
+  text-align: right;
+}

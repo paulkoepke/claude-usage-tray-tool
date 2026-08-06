@@ -1,0 +1,28 @@
+{
+  "name": "claude-usage-tray",
+  "version": "1.0.0",
+  "description": "Windows tray app that displays Claude.ai / Claude Code usage",
+  "main": "./out/main/index.js",
+  "author": "Paul Köpke",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "electron": "43.3.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "typescript": "7.0.2"
+  }
+}
