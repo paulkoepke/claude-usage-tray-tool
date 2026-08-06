@@ -113,18 +113,32 @@ function togglePopup(): void {
   showPopup()
 }
 
+function buildContextMenu(): Menu {
+  const autostartEnabled = app.getLoginItemSettings().openAtLogin
+
+  return Menu.buildFromTemplate([
+    { label: 'Refresh now', click: () => void poll() },
+    { label: 'Show/Hide', click: () => togglePopup() },
+    { type: 'separator' },
+    {
+      label: 'Start with Windows',
+      type: 'checkbox',
+      checked: autostartEnabled,
+      click: () => {
+        app.setLoginItemSettings({ openAtLogin: !autostartEnabled })
+        tray?.setContextMenu(buildContextMenu())
+      }
+    },
+    { type: 'separator' },
+    { label: 'Quit', click: () => app.quit() }
+  ])
+}
+
 async function createTray(): Promise<void> {
   tray = new Tray(await renderProgressIcon(0))
   tray.setToolTip('Claude Usage')
   tray.on('click', () => togglePopup())
-
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Refresh now', click: () => void poll() },
-    { label: 'Show/Hide', click: () => togglePopup() },
-    { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
-  ])
-  tray.setContextMenu(contextMenu)
+  tray.setContextMenu(buildContextMenu())
 }
 
 if (!app.requestSingleInstanceLock()) {
