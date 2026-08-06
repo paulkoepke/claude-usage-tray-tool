@@ -150,10 +150,25 @@ body {
   color: #5f5f68;
 }
 
-.term-status {
+.term-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #2a2a2e;
+}
+
+.term-version {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  color: #5f5f68;
+}
+
+.term-status {
+  flex: 1;
+  min-width: 0;
   font-size: 10.5px;
   color: #5f5f68;
   text-align: right;

@@ -4,6 +4,7 @@ import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
   POPUP_CLOSE_CHANNEL,
+  APP_VERSION_GET_CHANNEL,
   type UsageState
 } from '../shared/types'
 
@@ -14,7 +15,8 @@ const api = {
     ipcRenderer.on(USAGE_UPDATED_CHANNEL, listener)
     return () => ipcRenderer.removeListener(USAGE_UPDATED_CHANNEL, listener)
   },
-  closePopup: (): void => ipcRenderer.send(POPUP_CLOSE_CHANNEL)
+  closePopup: (): void => ipcRenderer.send(POPUP_CLOSE_CHANNEL),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke(APP_VERSION_GET_CHANNEL)
 }
 
 contextBridge.exposeInMainWorld('claudeUsage', api)

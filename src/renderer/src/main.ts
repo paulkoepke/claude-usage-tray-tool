@@ -33,7 +33,10 @@ app.innerHTML = `
       </div>
       <div class="metric-sub">reset --</div>
     </div>
-    <div class="term-status" id="status">loading…</div>
+    <div class="term-footer">
+      <span class="term-version" id="version"></span>
+      <span class="term-status" id="status">loading…</span>
+    </div>
   </div>
 `
 
@@ -115,6 +118,14 @@ function applyState(state: UsageState): void {
 }
 
 async function init(): Promise<void> {
+  try {
+    const version = await window.claudeUsage.getAppVersion()
+    const versionEl = document.getElementById('version')
+    if (versionEl) versionEl.textContent = `v${version}`
+  } catch {
+    // Version display is non-critical — ignore failures.
+  }
+
   try {
     const state = await window.claudeUsage.getUsage()
     if (state) applyState(state)

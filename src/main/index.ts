@@ -7,6 +7,7 @@ import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
   POPUP_CLOSE_CHANNEL,
+  APP_VERSION_GET_CHANNEL,
   type UsageState
 } from '../shared/types'
 
@@ -153,6 +154,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(async () => {
     ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
+    ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
 
     await createTray()
