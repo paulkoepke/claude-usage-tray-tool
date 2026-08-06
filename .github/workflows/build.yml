@@ -33,12 +33,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Bump patch version
+      - name: Determine next version
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          dry_run: true
+
+      - name: Bump version
         id: bump
         shell: bash
         run: |
-          npm version patch --no-git-tag-version
-          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          npm version ${{ steps.tag_version.outputs.new_version }} --no-git-tag-version --allow-same-version
+          echo "version=${{ steps.tag_version.outputs.new_version }}" >> "$GITHUB_OUTPUT"
 
       - name: Commit version bump
         shell: bash
