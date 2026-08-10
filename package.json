@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-tray",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Usage Tray Tool for Claude",
   "main": "./out/main/index.js",
   "author": "Paul Köpke",
