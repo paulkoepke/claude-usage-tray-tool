@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell, Tray, screen } from 'electron'
 import { autoUpdater } from 'electron-updater'
+import log from 'electron-log/main'
 import { readOAuthToken } from './token'
 import { fetchUsage } from './usage'
 import { renderProgressIcon } from './icon'
@@ -174,17 +175,36 @@ if (!app.requestSingleInstanceLock()) {
     pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
 
     if (app.isPackaged) {
+      log.initialize()
+      log.transports.file.level = 'info'
+      autoUpdater.logger = log
+
       const isPortable = !!process.env.PORTABLE_EXECUTABLE_FILE
       autoUpdater.autoDownload = !isPortable
 
+      // electron-updater's AppUpdater extends EventEmitter — an 'error' event with
+      // no listener crashes the process (Node's default EventEmitter behavior).
+      autoUpdater.on('error', (err) => {
+        log.error('Auto-update error:', err)
+      })
+
       autoUpdater.on('update-available', (info) => {
+        log.info(`Update available: ${info.version}`)
         if (!isPortable) return
         updateAvailableVersion = info.version
         tray?.setContextMenu(buildContextMenu())
       })
 
+      autoUpdater.on('update-not-available', (info) => {
+        log.info(`No update available, current version ${info.version}`)
+      })
+
+      autoUpdater.on('update-downloaded', (info) => {
+        log.info(`Update downloaded: ${info.version}, will install on quit`)
+      })
+
       autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-        console.error('Auto-update check failed:', err)
+        log.error('Auto-update check failed:', err)
       })
     }
   }).catch((err) => {
