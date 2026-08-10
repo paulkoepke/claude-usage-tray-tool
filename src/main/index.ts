@@ -10,7 +10,7 @@ import {
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   type UsageState
-} from '../shared/types'
+} from '@shared/types'
 
 const POLL_INTERVAL_MS = 180_000
 const POPUP_WIDTH = 280 + 32 // card width + window padding
@@ -39,7 +39,7 @@ async function poll(): Promise<void> {
   lastUsage = state
 
   if (state.status === 'ok') {
-    const percent = Math.max(state.usage.fiveHour.utilization, state.usage.sevenDay.utilization)
+    const percent = state.usage.fiveHour.utilization
     tray.setImage(await renderProgressIcon(percent))
     tray.setToolTip(
       `Claude Usage\n5h: ${state.usage.fiveHour.utilization.toFixed(0)}%\n7d: ${state.usage.sevenDay.utilization.toFixed(0)}%`
