@@ -10,7 +10,7 @@ import {
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   type UsageState
-} from '@shared/types'
+} from '../shared/types'
 
 const POLL_INTERVAL_MS = 180_000
 const POPUP_WIDTH = 280 + 32 // card width + window padding
