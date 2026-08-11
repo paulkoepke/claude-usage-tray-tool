@@ -4,6 +4,7 @@ import type { UsageState, UsageWindow } from '../../shared/types'
 const BAR_WIDTH = 16
 
 const MASCOT = ['▐▛███▜▌', '▝▜█████▛▘', '▘▘ ▝▝'].join('\n')
+const DEAD_MASCOT = ['▐█████▌', '▝▜X███X▛▘','▘▘ ▝▝'].join('\n')
 
 const app = document.getElementById('app')
 
@@ -16,7 +17,7 @@ app.innerHTML = `
     <div class="term-drag"></div>
     <span class="term-title">Claude Usage</span>
     <button class="term-close" id="close-btn" title="Close">[x]</button>
-    <pre class="mascot">${MASCOT}</pre>
+    <pre class="mascot" id="mascot">${MASCOT}</pre>
     <div class="metric" id="metric-5h">
       <div class="metric-row">
         <span class="metric-label">5h</span>
@@ -138,6 +139,11 @@ function setStale(stale: boolean): void {
   document.getElementById('metric-7d')?.classList.toggle('is-stale', stale)
 }
 
+function updateMascot(isDead: boolean): void {
+  const mascot = document.getElementById('mascot')
+  if (mascot) mascot.textContent = isDead ? DEAD_MASCOT : MASCOT
+}
+
 function applyState(state: UsageState): void {
   if (state.status === 'error') {
     setStatus(state.message, true)
@@ -147,6 +153,7 @@ function applyState(state: UsageState): void {
 
   renderMetric('metric-5h', state.usage.fiveHour)
   renderMetric('metric-7d', state.usage.sevenDay)
+  updateMascot(state.usage.fiveHour.utilization >= 100 || state.usage.sevenDay.utilization >= 100)
   setStale(false)
   setStatus(`updated ${new Date().toLocaleTimeString('en-US')}`, false)
 }
