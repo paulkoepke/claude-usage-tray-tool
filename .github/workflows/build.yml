@@ -92,4 +92,5 @@ jobs:
           body_path: CHANGES.md
           files: |
             dist/*.exe
+            dist/*.blockmap
             dist/latest.yml

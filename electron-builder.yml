@@ -19,8 +19,9 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  artifactName: Usage-Tray-Tool-for-Claude-Setup-${version}.${ext}
 portable:
-  artifactName: ${productName}-${version}-portable.${ext}
+  artifactName: Usage-Tray-Tool-for-Claude-${version}-portable.${ext}
 publish:
   provider: github
   owner: paulkoepke
