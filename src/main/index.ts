@@ -8,6 +8,7 @@ import { renderProgressIcon } from './icon'
 import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
+  USAGE_REFRESH_CHANNEL,
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   type UsageState
@@ -166,6 +167,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
+    ipcMain.on(USAGE_REFRESH_CHANNEL, () => void poll())
 
     await createTray()
     popup = createPopup()

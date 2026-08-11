@@ -12,5 +12,6 @@ export type UsageState = { status: 'ok'; usage: UsageResponse } | { status: 'err
 
 export const USAGE_GET_CHANNEL = 'usage:get'
 export const USAGE_UPDATED_CHANNEL = 'usage:updated'
+export const USAGE_REFRESH_CHANNEL = 'usage:refresh'
 export const POPUP_CLOSE_CHANNEL = 'popup:close'
 export const APP_VERSION_GET_CHANNEL = 'app:version'

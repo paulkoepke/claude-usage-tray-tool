@@ -64,24 +64,56 @@ function renderBar(percent: number): string {
   )
 }
 
-function formatResetTime(iso: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
-  return date.toLocaleString('en-US', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (days >= 1) return `${days}d ${hours}h`
+  if (hours >= 1) return `${hours}h ${minutes}m`
+  if (minutes >= 1) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
 }
 
-function renderMetric(groupId: string, data: UsageWindow): void {
+const resetTimestamps: Record<'metric-5h' | 'metric-7d', string | null> = {
+  'metric-5h': null,
+  'metric-7d': null
+}
+
+const REFRESH_TRIGGER_COOLDOWN_MS = 10_000
+let lastRefreshTrigger = 0
+
+function requestRefresh(): void {
+  const now = Date.now()
+  if (now - lastRefreshTrigger < REFRESH_TRIGGER_COOLDOWN_MS) return
+  lastRefreshTrigger = now
+  window.claudeUsage.requestRefresh()
+}
+
+function updateCountdown(groupId: 'metric-5h' | 'metric-7d'): void {
+  const group = document.getElementById(groupId)
+  const sub = group?.querySelector<HTMLElement>('.metric-sub')
+  const iso = resetTimestamps[groupId]
+  if (!sub || !iso) return
+
+  const remaining = new Date(iso).getTime() - Date.now()
+  if (remaining <= 0) {
+    sub.textContent = 'refreshing…'
+    requestRefresh()
+    return
+  }
+
+  sub.textContent = `reset in ${formatCountdown(remaining)}`
+}
+
+function renderMetric(groupId: 'metric-5h' | 'metric-7d', data: UsageWindow): void {
   const group = document.getElementById(groupId)
   if (!group) return
 
   const bar = group.querySelector<HTMLElement>('.metric-bar')
   const pct = group.querySelector<HTMLElement>('.metric-pct')
-  const sub = group.querySelector<HTMLElement>('.metric-sub')
 
   const percent = clampPercent(data.utilization)
   if (bar) bar.innerHTML = renderBar(percent)
@@ -89,7 +121,9 @@ function renderMetric(groupId: string, data: UsageWindow): void {
     pct.textContent = `${percent.toFixed(0)}%`
     pct.className = `metric-pct ${levelClass(percent)}`
   }
-  if (sub) sub.textContent = `reset ${formatResetTime(data.resetsAt)}`
+
+  resetTimestamps[groupId] = data.resetsAt
+  updateCountdown(groupId)
 }
 
 function setStatus(text: string, isError: boolean): void {
@@ -133,6 +167,11 @@ async function init(): Promise<void> {
     setStatus((err as Error).message, true)
   }
 }
+
+setInterval(() => {
+  updateCountdown('metric-5h')
+  updateCountdown('metric-7d')
+}, 1000)
 
 window.claudeUsage.onUsageUpdated((state) => applyState(state))
 
