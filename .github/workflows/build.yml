@@ -16,9 +16,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: windows-latest
+  version:
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: v${{ steps.bump.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -29,9 +32,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Determine next version
         id: tag_version
@@ -59,6 +59,23 @@ jobs:
           git push origin HEAD:main
           git push origin "v${{ steps.bump.outputs.version }}"
 
+  build-win:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Type check
         run: npm run typecheck
 
@@ -68,12 +85,68 @@ jobs:
       - name: Package Windows installer
         run: npm run dist:win
 
-      - name: Upload exe artifact
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: claude-usage-tray-${{ steps.bump.outputs.version }}-win
-          path: dist/*.exe
+          name: claude-usage-tray-${{ needs.version.outputs.version }}-win
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
           if-no-files-found: error
+
+  build-mac:
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build app
+        run: npm run build
+
+      - name: Package macOS app
+        run: npm run dist:mac
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: claude-usage-tray-${{ needs.version.outputs.version }}-mac
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
+          if-no-files-found: error
+
+  release:
+    needs: [version, build-win, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: dist
+          pattern: claude-usage-tray-*
+          merge-multiple: true
 
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
@@ -87,10 +160,13 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ steps.bump.outputs.version }}
-          name: v${{ steps.bump.outputs.version }}
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: ${{ needs.version.outputs.tag }}
           body_path: CHANGES.md
           files: |
             dist/*.exe
             dist/*.blockmap
             dist/latest.yml
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
