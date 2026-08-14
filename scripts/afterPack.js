@@ -3,11 +3,13 @@ const path = require('path')
 
 /**
  * We have no Apple Developer ID, so electron-builder skips code signing
- * entirely and ships a completely unsigned .app. On modern macOS,
- * Gatekeeper reacts to a fully unsigned, quarantined app with
- * "...is damaged and can't be opened" instead of the milder "unidentified
- * developer" prompt that right-click → Open can bypass. Ad-hoc signing
- * (no identity, no cost) is enough to get the milder prompt back.
+ * entirely and ships a completely unsigned .app. Ad-hoc signing (no
+ * identity, no cost) doesn't change Gatekeeper's verdict — an ad-hoc
+ * signature has no team identity, so it's blocked identically to a fully
+ * unsigned app ("...is damaged and can't be opened", see README's macOS
+ * install section for the actual workaround). Kept anyway since it gives
+ * the app a stable code identity for TCC/permission prompts and other
+ * signature-dependent macOS APIs.
  */
 exports.default = async function afterPack(context) {
   if (context.electronPlatformName !== 'darwin') return

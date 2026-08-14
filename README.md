@@ -40,18 +40,27 @@ with a paid certificate — click "More info" → "Run anyway" to launch it.
 - **`.dmg`** — mount it and drag the app into `/Applications`.
 - **`.zip`** — unzip and move the app into `/Applications` yourself.
 
-The app is **not code-signed or notarized** (no Apple Developer Program
-membership — this is a free hobby project). Because of that, macOS
-Gatekeeper will refuse to open it with a plain double-click ("*...can't be
-opened because Apple cannot check it for malicious software*" / "*is
-damaged and can't be opened*"). To launch it the first time:
+The app is **not notarized** — it's ad-hoc signed but has no paid Apple
+Developer Program membership behind it (this is a free hobby project), so
+there's no verifiable developer identity for Gatekeeper to trust. Because
+of that, macOS will refuse to open a downloaded copy with a plain
+double-click — usually with **"...is damaged and can't be opened. You
+should move it to the Trash."** On current macOS versions, right-click →
+"Open" does **not** bypass this (that trick only works for apps signed
+with a real paid Developer ID). To launch it the first time, use one of:
 
-- **Right-click (or Control-click) the app → "Open"** → confirm "Open" in
-  the dialog. This only has to be done once — after that it launches
-  normally.
-- If that still doesn't work (this can happen with unsigned apps
-  downloaded via a browser), remove the quarantine flag manually:
+- **Terminal (fastest, always works):** remove the quarantine flag that
+  macOS attaches to downloaded files:
   `xattr -cr "/Applications/Usage Tray Tool for Claude.app"`
+  (adjust the path if you haven't moved it into `/Applications` yet), then
+  open it normally.
+- **System Settings:** try to open the app once (it will fail/warn) →
+  **System Settings → Privacy & Security** → scroll to the bottom → click
+  **"Open Anyway"** next to the notice about the blocked app → confirm
+  in the follow-up dialog.
+
+Either way, this only has to be done once per copy of the app — after
+that it launches normally.
 
 **Auto-update is notify-only on macOS**, not automatic. Since the app
 isn't signed, `electron-updater`'s update mechanism can't verify and
