@@ -10,6 +10,8 @@ export interface UsageResponse {
 
 export type UsageState = { status: 'ok'; usage: UsageResponse } | { status: 'error'; message: string }
 
+export const POLL_INTERVAL_MS = 180_000
+
 export const USAGE_GET_CHANNEL = 'usage:get'
 export const USAGE_UPDATED_CHANNEL = 'usage:updated'
 export const USAGE_REFRESH_CHANNEL = 'usage:refresh'

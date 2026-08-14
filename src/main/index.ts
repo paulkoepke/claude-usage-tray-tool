@@ -11,10 +11,10 @@ import {
   USAGE_REFRESH_CHANNEL,
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
+  POLL_INTERVAL_MS,
   type UsageState
 } from '../shared/types'
 
-const POLL_INTERVAL_MS = 180_000
 const POPUP_WIDTH = 280 + 32 // card width + window padding
 const POPUP_HEIGHT = 300
 const RELEASES_URL = 'https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest'

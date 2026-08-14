@@ -1,5 +1,5 @@
 import './style.css'
-import type { UsageState, UsageWindow } from '../../shared/types'
+import { POLL_INTERVAL_MS, type UsageState, type UsageWindow } from '../../shared/types'
 
 const BAR_WIDTH = 16
 
@@ -127,11 +127,20 @@ function renderMetric(groupId: 'metric-5h' | 'metric-7d', data: UsageWindow): vo
   updateCountdown(groupId)
 }
 
+let nextRefreshAt = Date.now() + POLL_INTERVAL_MS
+
 function setStatus(text: string, isError: boolean): void {
   const status = document.getElementById('status')
   if (!status) return
   status.textContent = text
   status.classList.toggle('is-error', isError)
+}
+
+function updateRefreshStatus(): void {
+  const status = document.getElementById('status')
+  if (!status || status.classList.contains('is-error')) return
+  const remaining = nextRefreshAt - Date.now()
+  setStatus(`refresh in ${formatCountdown(Math.max(remaining, 0))}`, false)
 }
 
 function setStale(stale: boolean): void {
@@ -145,6 +154,8 @@ function updateMascot(isDead: boolean): void {
 }
 
 function applyState(state: UsageState): void {
+  nextRefreshAt = Date.now() + POLL_INTERVAL_MS
+
   if (state.status === 'error') {
     setStatus(state.message, true)
     setStale(true)
@@ -155,7 +166,7 @@ function applyState(state: UsageState): void {
   renderMetric('metric-7d', state.usage.sevenDay)
   updateMascot(state.usage.fiveHour.utilization >= 100 || state.usage.sevenDay.utilization >= 100)
   setStale(false)
-  setStatus(`updated ${new Date().toLocaleTimeString('en-US')}`, false)
+  updateRefreshStatus()
 }
 
 async function init(): Promise<void> {
@@ -178,6 +189,7 @@ async function init(): Promise<void> {
 setInterval(() => {
   updateCountdown('metric-5h')
   updateCountdown('metric-7d')
+  updateRefreshStatus()
 }, 1000)
 
 window.claudeUsage.onUsageUpdated((state) => applyState(state))
