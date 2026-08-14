@@ -31,6 +31,7 @@ mac:
   icon: build/icon.png
   category: public.app-category.utilities
   hardenedRuntime: false
+afterPack: scripts/afterPack.js
 publish:
   provider: github
   owner: paulkoepke
