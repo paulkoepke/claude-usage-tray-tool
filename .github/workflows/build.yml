@@ -2,7 +2,8 @@ name: Build & Release
 
 on:
   push:
-    branches: [main]
+    branches:
+      - '**'
     paths-ignore:
       - '**.md'
       - 'screenshots/**'
@@ -12,16 +13,18 @@ permissions:
   contents: write
 
 concurrency:
-  group: build-main
-  cancel-in-progress: false
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   version:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     outputs:
-      version: ${{ steps.bump.outputs.version }}
-      tag: v${{ steps.bump.outputs.version }}
+      version: ${{ steps.set.outputs.version }}
+      ref: ${{ steps.set.outputs.ref }}
+      tag: ${{ steps.set.outputs.tag }}
+      is_release: ${{ steps.set.outputs.is_release }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -34,6 +37,7 @@ jobs:
           node-version: 24
 
       - name: Determine next version
+        if: github.ref == 'refs/heads/main'
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
@@ -42,6 +46,7 @@ jobs:
           dry_run: true
 
       - name: Bump version
+        if: github.ref == 'refs/heads/main'
         id: bump
         shell: bash
         run: |
@@ -49,6 +54,7 @@ jobs:
           echo "version=${{ steps.tag_version.outputs.new_version }}" >> "$GITHUB_OUTPUT"
 
       - name: Commit version bump
+        if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -59,6 +65,30 @@ jobs:
           git push origin HEAD:main
           git push origin "v${{ steps.bump.outputs.version }}"
 
+      - name: Set preview version
+        if: github.ref != 'refs/heads/main'
+        id: preview
+        shell: bash
+        run: |
+          base=$(node -p "require('./package.json').version")
+          echo "version=${base}-preview.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Set job outputs
+        id: set
+        shell: bash
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "version=${{ steps.bump.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=v${{ steps.bump.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "ref=v${{ steps.bump.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ steps.preview.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "ref=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-win:
     needs: version
     runs-on: windows-latest
@@ -66,7 +96,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.tag }}
+          ref: ${{ needs.version.outputs.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -78,6 +108,11 @@ jobs:
 
       - name: Type check
         run: npm run typecheck
+
+      - name: Apply preview version
+        if: needs.version.outputs.is_release != 'true'
+        shell: bash
+        run: npm version ${{ needs.version.outputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Build app
         run: npm run build
@@ -102,7 +137,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.tag }}
+          ref: ${{ needs.version.outputs.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -114,6 +149,11 @@ jobs:
 
       - name: Type check
         run: npm run typecheck
+
+      - name: Apply preview version
+        if: needs.version.outputs.is_release != 'true'
+        shell: bash
+        run: npm version ${{ needs.version.outputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Build app
         run: npm run build
@@ -133,12 +173,13 @@ jobs:
 
   release:
     needs: [version, build-win, build-mac]
+    if: needs.version.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.tag }}
+          ref: ${{ needs.version.outputs.ref }}
           fetch-depth: 0
 
       - name: Download build artifacts

@@ -3,10 +3,11 @@
 ![Popup window](screenshots/screenshot-tool.png)
 ![Tray icon and tooltip](screenshots/screenshot-tray-icon.png)
 
-A free, open-source Windows tool that shows your current Claude.ai /
-Claude Code usage (5-hour and 7-day windows, Pro/Max subscription) right
-on your desktop. It lives as an icon in the system tray and, on click,
-opens a small always-on-top widget with the detailed usage breakdown.
+A free, open-source Windows and macOS tool that shows your current
+Claude.ai / Claude Code usage (5-hour and 7-day windows, Pro/Max
+subscription) right on your desktop. It lives as an icon in the system
+tray / menu bar and, on click, opens a small always-on-top widget with the
+detailed usage breakdown.
 
 > **Disclaimer:** This is an independent, unofficial hobby project. It is
 > **not affiliated with, endorsed by, or supported by Anthropic** in any
@@ -22,7 +23,9 @@ opens a small always-on-top widget with the detailed usage breakdown.
 
 ## Installation
 
-Grab the latest build from [GitHub Releases](https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest):
+Grab the latest build from [GitHub Releases](https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest).
+
+### Windows
 
 - **Installer** (`...Setup*.exe`) — installs the app and adds it to your
   Start menu, with an uninstaller.
@@ -32,19 +35,58 @@ Grab the latest build from [GitHub Releases](https://github.com/paulkoepke/claud
 Windows SmartScreen may warn about the app since it isn't code-signed
 with a paid certificate — click "More info" → "Run anyway" to launch it.
 
+### macOS
+
+- **`.dmg`** — mount it and drag the app into `/Applications`.
+- **`.zip`** — unzip and move the app into `/Applications` yourself.
+
+The app is **not code-signed or notarized** (no Apple Developer Program
+membership — this is a free hobby project). Because of that, macOS
+Gatekeeper will refuse to open it with a plain double-click ("*...can't be
+opened because Apple cannot check it for malicious software*" / "*is
+damaged and can't be opened*"). To launch it the first time:
+
+- **Right-click (or Control-click) the app → "Open"** → confirm "Open" in
+  the dialog. This only has to be done once — after that it launches
+  normally.
+- If that still doesn't work (this can happen with unsigned apps
+  downloaded via a browser), remove the quarantine flag manually:
+  `xattr -cr "/Applications/Usage Tray Tool for Claude.app"`
+
+**Auto-update is notify-only on macOS**, not automatic. Since the app
+isn't signed, `electron-updater`'s update mechanism can't verify and
+install a downloaded update the way it does on Windows. Instead, the app
+checks GitHub Releases in the background and — if a newer version exists —
+shows a "New version available!" item in the tray's right-click menu that
+opens the releases page, same as the Windows portable build. Download and
+reinstall (drag the new `.app` over the old one) to update.
+
 ## Features
 
 - **Tray icon**: shows usage as a ring/bar (32x32), color-coded by
   threshold — green (<50%), yellow (50–80%), red (>80%)
 - **Popup window**: click the tray icon to open a frameless, draggable
   window with two progress bars (5h / 7d), percentage, and reset time
-- **Context menu** (right-click): "Refresh now", "Show/Hide", "Quit"
+- **Context menu** (right-click): "Refresh now", "Show/Hide", "Start with
+  Windows" / "Start with macOS" (login item toggle), "Quit"
 - Polls usage data automatically every 180 seconds
-- **Auto-updates** (installer version only): checks GitHub Releases on
-  startup, downloads updates in the background, and installs them on the
-  next restart — no manual re-download needed. The portable exe doesn't
-  auto-update, but shows a "New version available!" item in the tray's
-  right-click menu — click it to open the releases page.
+- **Auto-updates** (Windows installer version only): checks GitHub
+  Releases on startup, downloads updates in the background, and installs
+  them on the next restart — no manual re-download needed. The Windows
+  portable exe and the **macOS build** don't auto-install updates, but
+  show a "New version available!" item in the tray's right-click menu —
+  click it to open the releases page. See [macOS](#macos) above for why.
+
+### Autostart ("Start with Windows" / "Start with macOS")
+
+The tray menu's login-item toggle uses Electron's
+`app.setLoginItemSettings()` on both platforms — on macOS this registers
+the app with the standard macOS Login Items list (same one under System
+Settings → General → Login Items). It works the same whether the app is
+signed or not; unsigned code signing doesn't block registering as a login
+item. Note that macOS Login Items are registered by the app's file path,
+so if you replace the `.app` bundle with a new version at a different
+location, you may need to re-toggle autostart off/on once.
 
 ## Tech stack
 
@@ -70,8 +112,11 @@ anthropic-beta: oauth-2025-04-20
 
 The `accessToken` is reused from your existing local Claude Code login —
 no separate sign-in required. On Windows it is stored in plaintext at
-`%USERPROFILE%\.claude\.credentials.json`, which this app only reads
-locally on your machine.
+`%USERPROFILE%\.claude\.credentials.json`. On macOS it is stored in the
+Keychain instead, under the service name `Claude Code-credentials` — the
+app reads it via `security find-generic-password -s "Claude
+Code-credentials" -w`. Either way, this app only reads the token locally
+on your machine.
 
 ## Project structure
 
@@ -93,6 +138,7 @@ npm run dev         # electron-vite dev mode
 npm run typecheck   # TypeScript checks (main + renderer)
 npm run build       # production build
 npm run dist:win    # Windows installer (NSIS) via electron-builder
+npm run dist:mac    # macOS .dmg + .zip via electron-builder (unsigned)
 ```
 
 ## Screenshots
