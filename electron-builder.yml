@@ -11,6 +11,8 @@ asarUnpack:
   - resources/**/*
   - node_modules/@napi-rs/canvas/**/*
   - node_modules/@napi-rs/canvas-win32-x64-msvc/**/*
+  - node_modules/@napi-rs/canvas-darwin-x64/**/*
+  - node_modules/@napi-rs/canvas-darwin-arm64/**/*
 win:
   target:
     - nsis
@@ -22,6 +24,14 @@ nsis:
   artifactName: Usage-Tray-Tool-for-Claude-Setup-${version}.${ext}
 portable:
   artifactName: Usage-Tray-Tool-for-Claude-${version}-portable.${ext}
+mac:
+  target:
+    - dmg
+    - zip
+  icon: build/icon.png
+  category: public.app-category.utilities
+  hardenedRuntime: false
+afterPack: scripts/afterPack.js
 publish:
   provider: github
   owner: paulkoepke

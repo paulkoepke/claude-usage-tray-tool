@@ -17,7 +17,8 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "dist:win": "npm run build && electron-builder --win --publish never"
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.3",

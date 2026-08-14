@@ -5,3 +5,5 @@ dist
 .env
 .idea
 .claude
+docs/macos-release-plan.md
+.DS_Store

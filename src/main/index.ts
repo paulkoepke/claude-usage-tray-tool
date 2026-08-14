@@ -138,7 +138,7 @@ function buildContextMenu(): Menu {
     { label: 'Show/Hide', click: () => togglePopup() },
     { type: 'separator' },
     {
-      label: 'Start with Windows',
+      label: `Start with ${process.platform === 'darwin' ? 'macOS' : 'Windows'}`,
       type: 'checkbox',
       checked: autostartEnabled,
       click: () => {
@@ -181,8 +181,12 @@ if (!app.requestSingleInstanceLock()) {
       log.transports.file.level = 'info'
       autoUpdater.logger = log
 
+      // Portable Windows builds can't self-replace, and unsigned macOS
+      // builds can't pass Squirrel.Mac's signature check on install — both
+      // cases only notify via the tray menu instead of auto-applying.
       const isPortable = !!process.env.PORTABLE_EXECUTABLE_FILE
-      autoUpdater.autoDownload = !isPortable
+      const autoApplyUpdates = process.platform === 'win32' && !isPortable
+      autoUpdater.autoDownload = autoApplyUpdates
 
       // electron-updater's AppUpdater extends EventEmitter — an 'error' event with
       // no listener crashes the process (Node's default EventEmitter behavior).
@@ -192,7 +196,7 @@ if (!app.requestSingleInstanceLock()) {
 
       autoUpdater.on('update-available', (info) => {
         log.info(`Update available: ${info.version}`)
-        if (!isPortable) return
+        if (autoApplyUpdates) return
         updateAvailableVersion = info.version
         tray?.setContextMenu(buildContextMenu())
       })
