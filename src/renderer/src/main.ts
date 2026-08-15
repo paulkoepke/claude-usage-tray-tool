@@ -166,6 +166,7 @@ function applyState(state: UsageState): void {
   renderMetric('metric-7d', state.usage.sevenDay)
   updateMascot(state.usage.fiveHour.utilization >= 100 || state.usage.sevenDay.utilization >= 100)
   setStale(false)
+  document.getElementById('status')?.classList.remove('is-error')
   updateRefreshStatus()
 }
 
