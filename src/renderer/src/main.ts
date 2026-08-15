@@ -84,6 +84,11 @@ const resetTimestamps: Record<'metric-5h' | 'metric-7d', string | null> = {
 }
 
 const REFRESH_TRIGGER_COOLDOWN_MS = 10_000
+// The server-side window doesn't necessarily roll over in the exact instant
+// resets_at passes — asking right at that millisecond can still get the old,
+// expired data back. Give it a couple of seconds before the first refresh
+// attempt instead of firing immediately on expiry.
+const EXPIRY_GRACE_MS = 2_000
 let lastRefreshTrigger = 0
 
 function requestRefresh(): void {
@@ -91,6 +96,11 @@ function requestRefresh(): void {
   if (now - lastRefreshTrigger < REFRESH_TRIGGER_COOLDOWN_MS) return
   lastRefreshTrigger = now
   window.claudeUsage.requestRefresh()
+}
+
+function refreshingText(): string {
+  const dotCount = 1 + (Math.floor(Date.now() / 1000) % 3)
+  return `refreshing${'.'.repeat(dotCount)}${' '.repeat(3 - dotCount)}`
 }
 
 function updateCountdown(groupId: 'metric-5h' | 'metric-7d'): void {
@@ -101,8 +111,8 @@ function updateCountdown(groupId: 'metric-5h' | 'metric-7d'): void {
 
   const remaining = new Date(iso).getTime() - Date.now()
   if (remaining <= 0) {
-    sub.textContent = 'refreshing…'
-    requestRefresh()
+    sub.textContent = refreshingText()
+    if (remaining <= -EXPIRY_GRACE_MS) requestRefresh()
     return
   }
 

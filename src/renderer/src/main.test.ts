@@ -183,6 +183,41 @@ describe('happy path rendering', () => {
   })
 })
 
+describe('auto-refresh on expired countdown', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
+  })
+
+  it('shows "refreshing…" as soon as the countdown hits zero, but does not request a refresh yet', async () => {
+    const { pushUpdate } = await loadApp()
+    const now = Date.now()
+
+    pushUpdate(makeOkState({ fiveHour: { resetsAt: new Date(now + 1_000).toISOString() } }))
+
+    vi.advanceTimersByTime(1_000)
+
+    expect(document.querySelector('#metric-5h .metric-sub')?.textContent).toMatch(/^refreshing/)
+    expect(window.claudeUsage.requestRefresh).not.toHaveBeenCalled()
+  })
+
+  it('waits ~2 seconds after expiry before requesting a refresh, to give the server time to roll the window over', async () => {
+    const { pushUpdate } = await loadApp()
+    const now = Date.now()
+
+    // Countdown hits zero at t=3000ms.
+    pushUpdate(makeOkState({ fiveHour: { resetsAt: new Date(now + 3_000).toISOString() } }))
+
+    // t=4000ms: 1s past expiry, still inside the 2s grace period.
+    vi.advanceTimersByTime(4_000)
+    expect(window.claudeUsage.requestRefresh).not.toHaveBeenCalled()
+
+    // t=5000ms: 2s past expiry — the grace period has elapsed.
+    vi.advanceTimersByTime(1_000)
+    expect(window.claudeUsage.requestRefresh).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('initial load from the main process', () => {
   beforeEach(() => {
     vi.useFakeTimers()
