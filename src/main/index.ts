@@ -2,8 +2,7 @@ import { join } from 'path'
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell, Tray, screen } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log/main'
-import { readOAuthToken } from './token'
-import { fetchUsage } from './usage'
+import { resolveUsageState } from './pollState'
 import { renderProgressIcon } from './icon'
 import {
   USAGE_GET_CHANNEL,
@@ -28,16 +27,7 @@ let updateAvailableVersion: string | null = null
 async function poll(): Promise<void> {
   if (!tray) return
 
-  let state: UsageState
-  try {
-    const token = await readOAuthToken()
-    state = token
-      ? { status: 'ok', usage: await fetchUsage(token) }
-      : { status: 'error', message: 'No Claude Code login found — sign in via Claude Code first' }
-  } catch (err) {
-    state = { status: 'error', message: (err as Error).message }
-  }
-
+  const state = await resolveUsageState()
   lastUsage = state
 
   if (state.status === 'ok') {
