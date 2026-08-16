@@ -4,7 +4,7 @@ import { autoUpdater } from 'electron-updater'
 import log from 'electron-log/main'
 import { resolveUsageState } from './pollState'
 import { renderProgressIcon } from './icon'
-import { QuickRetryBudget, isStaleState } from './refreshPolicy'
+import { QuickRetryGate } from './refreshPolicy'
 import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
@@ -24,14 +24,12 @@ let popup: BrowserWindow | null = null
 let pollTimer: NodeJS.Timeout | null = null
 let lastUsage: UsageState | null = null
 let updateAvailableVersion: string | null = null
-const quickRetryBudget = new QuickRetryBudget()
+const quickRetryGate = new QuickRetryGate()
 
-async function poll(): Promise<void> {
+async function poll(options?: { armQuickRetry?: boolean }): Promise<void> {
   if (!tray) return
 
   const previousStatus = lastUsage?.status
-  const now = Date.now()
-  quickRetryBudget.recordPollAttempt(now)
   const state = await resolveUsageState()
   lastUsage = state
 
@@ -49,17 +47,7 @@ async function poll(): Promise<void> {
     tray.setToolTip(`Claude Usage: ${state.message}`)
   }
 
-  const attemptsBefore = quickRetryBudget.attempts
-  quickRetryBudget.recordPollResult(state, now)
-  if (isStaleState(state, now)) {
-    if (quickRetryBudget.exhausted) {
-      log.warn('Usage data still stale after max quick retries — falling back to the regular poll interval')
-    } else {
-      log.info(`Usage data still stale (resets_at in the past or poll failed), quick retry ${quickRetryBudget.attempts}`)
-    }
-  } else if (attemptsBefore > 0) {
-    log.info('Usage data no longer stale — quick-retry budget reset')
-  }
+  if (options?.armQuickRetry) quickRetryGate.armForRegularPoll()
 
   popup?.webContents.send(USAGE_UPDATED_CHANNEL, state)
 }
@@ -179,12 +167,8 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
     ipcMain.on(USAGE_REFRESH_CHANNEL, () => {
-      if (quickRetryBudget.exhausted) {
-        log.debug('Auto-refresh request ignored — quick-retry budget exhausted, waiting for the next scheduled poll')
-        return
-      }
-      if (!quickRetryBudget.canTriggerRefresh(Date.now())) {
-        log.debug('Auto-refresh request throttled — too soon since the last poll')
+      if (!quickRetryGate.tryConsume()) {
+        log.debug('Auto-refresh request ignored — quick retry already used this cycle')
         return
       }
       log.info('Auto-refresh triggered by expired countdown')
@@ -202,8 +186,8 @@ if (!app.requestSingleInstanceLock()) {
     popup = createPopup()
     popup.once('ready-to-show', () => showPopup())
 
-    void poll()
-    pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
+    void poll({ armQuickRetry: true })
+    pollTimer = setInterval(() => void poll({ armQuickRetry: true }), POLL_INTERVAL_MS)
 
     if (app.isPackaged) {
       autoUpdater.logger = log
