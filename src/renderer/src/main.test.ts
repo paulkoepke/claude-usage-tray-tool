@@ -93,6 +93,34 @@ describe('applyState error recovery', () => {
     expect(document.getElementById('metric-5h')?.classList.contains('is-stale')).toBe(false)
     expect(document.getElementById('metric-7d')?.classList.contains('is-stale')).toBe(false)
   })
+
+  it('shows the error message but keeps the last known data on screen when a poll fails after data was already showing', async () => {
+    const { pushUpdate } = await loadApp()
+
+    pushUpdate(
+      makeOkState({
+        fiveHour: { utilization: 42, resetsAt: new Date(Date.now() + 3_600_000).toISOString() },
+        sevenDay: { utilization: 17 }
+      })
+    )
+    expect(document.querySelector('#metric-5h .metric-pct')?.textContent).toBe('42%')
+    expect(document.querySelector('#metric-7d .metric-pct')?.textContent).toBe('17%')
+    expect(document.querySelector('#metric-5h .metric-sub')?.textContent).toMatch(/^reset in /)
+
+    pushUpdate(makeErrorState('Usage endpoint responded with status 500'))
+
+    const status = document.getElementById('status')
+    expect(status?.classList.contains('is-error')).toBe(true)
+    expect(status?.textContent).toBe('Usage endpoint responded with status 500')
+
+    // The last known numbers stay on screen, untouched, just marked stale —
+    // applyState() skips renderMetric() entirely on an error state.
+    expect(document.querySelector('#metric-5h .metric-pct')?.textContent).toBe('42%')
+    expect(document.querySelector('#metric-7d .metric-pct')?.textContent).toBe('17%')
+    expect(document.querySelector('#metric-5h .metric-sub')?.textContent).toMatch(/^reset in /)
+    expect(document.getElementById('metric-5h')?.classList.contains('is-stale')).toBe(true)
+    expect(document.getElementById('metric-7d')?.classList.contains('is-stale')).toBe(true)
+  })
 })
 
 describe('happy path rendering', () => {

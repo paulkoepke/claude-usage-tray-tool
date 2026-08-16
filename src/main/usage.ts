@@ -10,7 +10,8 @@ export async function fetchUsage(accessToken: string): Promise<UsageResponse> {
   const res = await fetch(USAGE_ENDPOINT, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'anthropic-beta': 'oauth-2025-04-20'
+      'anthropic-beta': 'oauth-2025-04-20',
+      'User-Agent': 'claude-code/2.1.233'
     }
   })
 
