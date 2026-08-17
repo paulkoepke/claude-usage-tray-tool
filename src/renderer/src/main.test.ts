@@ -80,7 +80,60 @@ describe('applyState error recovery', () => {
 
     expect(status?.classList.contains('is-error')).toBe(false)
     expect(status?.textContent).not.toBe('Token expired — please log in again via Claude Code')
+
+    // A successful poll flashes "✓ synced" for a moment before settling
+    // back into the countdown text.
+    vi.advanceTimersByTime(1_300)
     expect(status?.textContent).toMatch(/^refresh in /)
+  })
+
+  it('flashes "✓ synced" briefly on a successful poll before reverting to the countdown', async () => {
+    const { pushUpdate } = await loadApp()
+
+    pushUpdate(makeOkState())
+
+    const status = document.getElementById('status')
+    expect(status?.classList.contains('is-synced')).toBe(true)
+    expect(status?.textContent).toBe('✓ synced')
+
+    vi.advanceTimersByTime(1_300)
+
+    expect(status?.classList.contains('is-synced')).toBe(false)
+    expect(status?.textContent).toMatch(/^refresh in /)
+  })
+
+  it('never shows the green "✓ synced" flash when a poll fails', async () => {
+    const { pushUpdate } = await loadApp()
+
+    pushUpdate(makeErrorState('Usage endpoint responded with status 500'))
+
+    const status = document.getElementById('status')
+    expect(status?.classList.contains('is-synced')).toBe(false)
+    expect(status?.textContent).not.toBe('✓ synced')
+    expect(status?.classList.contains('is-error')).toBe(true)
+  })
+
+  it('cancels an in-progress "✓ synced" flash immediately if an error poll arrives mid-flash', async () => {
+    const { pushUpdate } = await loadApp()
+
+    pushUpdate(makeOkState())
+
+    const status = document.getElementById('status')
+    expect(status?.classList.contains('is-synced')).toBe(true)
+
+    // Error arrives while the green flash is still showing, well before the
+    // FLASH_HOLD_MS timer would have reverted it on its own.
+    vi.advanceTimersByTime(200)
+    pushUpdate(makeErrorState('Usage endpoint responded with status 500'))
+
+    expect(status?.classList.contains('is-synced')).toBe(false)
+    expect(status?.classList.contains('is-error')).toBe(true)
+    expect(status?.textContent).toBe('Usage endpoint responded with status 500')
+
+    // The cancelled flash timers must not fire later and clobber the error.
+    vi.advanceTimersByTime(1_300)
+    expect(status?.classList.contains('is-synced')).toBe(false)
+    expect(status?.textContent).toBe('Usage endpoint responded with status 500')
   })
 
   it('also un-stales the metric bars after recovering from an error', async () => {

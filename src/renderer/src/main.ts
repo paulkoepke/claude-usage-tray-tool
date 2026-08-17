@@ -1,5 +1,6 @@
 import './style.css'
-import { POLL_INTERVAL_MS, type UsageState, type UsageWindow } from '../../shared/types'
+import type { UsageState, UsageWindow } from '../../shared/types'
+import { formatCountdown, setStatus, updateRefreshStatus, flashSynced, scheduleNextRefresh } from './statusLine'
 
 const BAR_WIDTH = 16
 
@@ -65,19 +66,6 @@ function renderBar(percent: number): string {
   )
 }
 
-function formatCountdown(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000)
-  const days = Math.floor(totalSeconds / 86400)
-  const hours = Math.floor((totalSeconds % 86400) / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-
-  if (days >= 1) return `${days}d ${hours}h`
-  if (hours >= 1) return `${hours}h ${minutes}m`
-  if (minutes >= 1) return `${minutes}m ${seconds}s`
-  return `${seconds}s`
-}
-
 const resetTimestamps: Record<'metric-5h' | 'metric-7d', string | null> = {
   'metric-5h': null,
   'metric-7d': null
@@ -137,22 +125,6 @@ function renderMetric(groupId: 'metric-5h' | 'metric-7d', data: UsageWindow): vo
   updateCountdown(groupId)
 }
 
-let nextRefreshAt = Date.now() + POLL_INTERVAL_MS
-
-function setStatus(text: string, isError: boolean): void {
-  const status = document.getElementById('status')
-  if (!status) return
-  status.textContent = text
-  status.classList.toggle('is-error', isError)
-}
-
-function updateRefreshStatus(): void {
-  const status = document.getElementById('status')
-  if (!status || status.classList.contains('is-error')) return
-  const remaining = nextRefreshAt - Date.now()
-  setStatus(`refresh in ${formatCountdown(Math.max(remaining, 0))}`, false)
-}
-
 function setStale(stale: boolean): void {
   document.getElementById('metric-5h')?.classList.toggle('is-stale', stale)
   document.getElementById('metric-7d')?.classList.toggle('is-stale', stale)
@@ -164,7 +136,7 @@ function updateMascot(isDead: boolean): void {
 }
 
 function applyState(state: UsageState): void {
-  nextRefreshAt = Date.now() + POLL_INTERVAL_MS
+  scheduleNextRefresh()
 
   if (state.status === 'error') {
     setStatus(state.message, true)
@@ -176,8 +148,7 @@ function applyState(state: UsageState): void {
   renderMetric('metric-7d', state.usage.sevenDay)
   updateMascot(state.usage.fiveHour.utilization >= 100 || state.usage.sevenDay.utilization >= 100)
   setStale(false)
-  document.getElementById('status')?.classList.remove('is-error')
-  updateRefreshStatus()
+  flashSynced()
 }
 
 async function init(): Promise<void> {
