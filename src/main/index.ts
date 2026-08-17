@@ -67,7 +67,11 @@ function createPopup(): BrowserWindow {
     alwaysOnTop: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // The popup intentionally stays open without focus (see CLAUDE.md) — Electron's
+      // default throttling of timers/animations for unfocused windows would otherwise
+      // freeze the countdown and "refreshing..." dots while it sits open in the background.
+      backgroundThrottling: false
     }
   })
 
