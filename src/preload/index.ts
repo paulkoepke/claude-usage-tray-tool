@@ -6,6 +6,7 @@ import {
   USAGE_REFRESH_CHANNEL,
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
+  POPUP_RESIZE_CHANNEL,
   type UsageState
 } from '../shared/types'
 
@@ -18,6 +19,7 @@ const api = {
   },
   requestRefresh: (): void => ipcRenderer.send(USAGE_REFRESH_CHANNEL),
   closePopup: (): void => ipcRenderer.send(POPUP_CLOSE_CHANNEL),
+  resizePopup: (height: number): void => ipcRenderer.send(POPUP_RESIZE_CHANNEL, height),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke(APP_VERSION_GET_CHANNEL)
 }
 

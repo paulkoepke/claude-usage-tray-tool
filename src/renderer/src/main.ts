@@ -79,6 +79,12 @@ setInterval(() => {
 
 window.claudeUsage.onUsageUpdated((state) => applyState(state))
 
+// Keep the window exactly as tall as the card — the transparent remainder of a
+// fixed-size window would otherwise block clicks on whatever is behind it.
+new ResizeObserver(() => {
+  window.claudeUsage.resizePopup(Math.ceil(document.body.getBoundingClientRect().height))
+}).observe(document.body)
+
 document.getElementById('close-btn')?.addEventListener('click', () => {
   window.claudeUsage.closePopup()
 })

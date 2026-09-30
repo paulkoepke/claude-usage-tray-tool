@@ -11,12 +11,13 @@ import {
   USAGE_REFRESH_CHANNEL,
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
+  POPUP_RESIZE_CHANNEL,
   POLL_INTERVAL_MS,
   type UsageState
 } from '../shared/types'
 
-const POPUP_WIDTH = 280 + 32 // card width + window padding
-const POPUP_HEIGHT = 300
+const POPUP_WIDTH = 280 // card width — no side padding, see style.css
+const POPUP_HEIGHT = 240 // initial estimate, the renderer reports the real content height
 const RELEASES_URL = 'https://github.com/paulkoepke/claude-usage-tray-tool/releases/latest'
 
 let tray: Tray | null = null
@@ -170,6 +171,14 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
+    ipcMain.on(POPUP_RESIZE_CHANNEL, (_event, height: unknown) => {
+      if (!popup || typeof height !== 'number' || !Number.isFinite(height) || height <= 0) return
+      const bounds = popup.getBounds()
+      const newHeight = Math.round(height)
+      if (newHeight === bounds.height) return
+      // Keep the bottom edge in place — the popup sits above the tray icon.
+      popup.setBounds({ ...bounds, y: bounds.y + bounds.height - newHeight, height: newHeight })
+    })
     ipcMain.on(USAGE_REFRESH_CHANNEL, () => {
       if (!quickRetryGate.tryConsume()) {
         log.debug('Auto-refresh request ignored — quick retry already used this cycle')

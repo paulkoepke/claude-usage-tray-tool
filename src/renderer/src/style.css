@@ -14,7 +14,9 @@ body {
 }
 
 body {
-  padding: 16px;
+  /* Only the top needs room (drag strip + title sit above the card border) —
+     any transparent margin around the card still swallows clicks on Windows. */
+  padding: 14px 0 0;
   font-family:
     'Cascadia Code',
     'Cascadia Mono',

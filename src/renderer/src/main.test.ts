@@ -47,8 +47,18 @@ async function loadApp(
     }),
     requestRefresh: vi.fn(),
     closePopup: vi.fn(),
+    resizePopup: vi.fn(),
     getAppVersion: vi.fn().mockResolvedValue(options?.version ?? '1.0.0')
   }
+
+  // jsdom has no ResizeObserver — main.ts only uses it to report the window height.
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe(): void {}
+      disconnect(): void {}
+    }
+  )
 
   vi.resetModules()
   await import('./main')
