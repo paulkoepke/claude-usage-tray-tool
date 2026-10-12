@@ -11,7 +11,7 @@ export async function fetchUsage(accessToken: string): Promise<UsageResponse> {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'anthropic-beta': 'oauth-2025-04-20',
-      'User-Agent': 'claude-code/2.1.233'
+      'User-Agent': 'claude-code/2.1.296'
     }
   })
 
