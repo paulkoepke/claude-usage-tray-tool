@@ -1,4 +1,4 @@
-import type { UsageWindow } from '../../shared/types'
+import type { ExtraUsage, UsageWindow } from '../../shared/types'
 import { formatCountdown } from './statusLine'
 
 const BAR_WIDTH = 16
@@ -93,7 +93,39 @@ export function renderMetric(groupId: MetricGroupId, data: UsageWindow): void {
   updateCountdown(groupId)
 }
 
+function formatMoney(minor: number, extra: ExtraUsage): string {
+  const amount = (minor / 10 ** extra.decimalPlaces).toFixed(extra.decimalPlaces)
+  return extra.currency === 'USD' ? `$${amount}` : `${amount} ${extra.currency}`
+}
+
+export function renderExtraMetric(extra: ExtraUsage | undefined): void {
+  const group = document.getElementById('metric-extra')
+  if (!group) return
+
+  group.hidden = !extra
+  if (!extra) return
+
+  // Shown on manual override even without a limit — nothing to measure against then.
+  const hasLimit = extra.limitMinor !== null && extra.limitMinor > 0
+  const percent = hasLimit ? clampPercent((extra.usedMinor / extra.limitMinor!) * 100) : 0
+  const bar = group.querySelector<HTMLElement>('.metric-bar')
+  const pct = group.querySelector<HTMLElement>('.metric-pct')
+  const sub = group.querySelector<HTMLElement>('.metric-sub')
+
+  if (bar) bar.innerHTML = renderBar(percent)
+  if (pct) {
+    pct.textContent = hasLimit ? `${percent.toFixed(0)}%` : '--%'
+    pct.className = `metric-pct ${levelClass(percent)}`
+  }
+  if (sub) {
+    sub.textContent = hasLimit
+      ? `${formatMoney(extra.usedMinor, extra)} / ${formatMoney(extra.limitMinor!, extra)}`
+      : 'no limit set'
+  }
+}
+
 export function setMetricsStale(stale: boolean): void {
   document.getElementById('metric-5h')?.classList.toggle('is-stale', stale)
   document.getElementById('metric-7d')?.classList.toggle('is-stale', stale)
+  document.getElementById('metric-extra')?.classList.toggle('is-stale', stale)
 }

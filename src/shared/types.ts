@@ -3,9 +3,21 @@ export interface UsageWindow {
   resetsAt: string
 }
 
+export interface ExtraUsage {
+  /** The API's `is_enabled` flag. */
+  enabled: boolean
+  /** Amounts are in minor units (e.g. cents), see `decimalPlaces`. */
+  usedMinor: number
+  limitMinor: number | null
+  currency: string
+  decimalPlaces: number
+}
+
 export interface UsageResponse {
   fiveHour: UsageWindow
   sevenDay: UsageWindow
+  /** Raw from the API in the main process; the popup only gets it when the row should show. */
+  extraUsage?: ExtraUsage
 }
 
 export type UsageState = { status: 'ok'; usage: UsageResponse } | { status: 'error'; message: string }

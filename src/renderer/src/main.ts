@@ -1,7 +1,7 @@
 import './style.css'
 import type { UsageState } from '../../shared/types'
 import { setStatus, updateRefreshStatus, flashSynced, scheduleNextRefresh } from './statusLine'
-import { renderMetric, updateMetricCountdowns, setMetricsStale } from './metrics'
+import { renderMetric, renderExtraMetric, updateMetricCountdowns, setMetricsStale } from './metrics'
 import { MASCOT, updateMascot } from './mascot'
 
 const app = document.getElementById('app')
@@ -32,6 +32,14 @@ app.innerHTML = `
       </div>
       <div class="metric-sub">reset --</div>
     </div>
+    <div class="metric" id="metric-extra" hidden>
+      <div class="metric-row">
+        <span class="metric-label">$$</span>
+        <span class="metric-bar"></span>
+        <span class="metric-pct">--%</span>
+      </div>
+      <div class="metric-sub">-- / --</div>
+    </div>
     <div class="term-footer">
       <span class="term-version" id="version"></span>
       <span class="term-status" id="status">loading…</span>
@@ -50,6 +58,7 @@ function applyState(state: UsageState): void {
 
   renderMetric('metric-5h', state.usage.fiveHour)
   renderMetric('metric-7d', state.usage.sevenDay)
+  renderExtraMetric(state.usage.extraUsage)
   updateMascot(state.usage.fiveHour.utilization >= 100 || state.usage.sevenDay.utilization >= 100)
   setMetricsStale(false)
   flashSynced()
