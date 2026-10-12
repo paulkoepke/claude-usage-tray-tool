@@ -6,6 +6,12 @@ import { resolveUsageState } from './pollState'
 import { renderProgressIcon } from './icon'
 import { QuickRetryGate } from './refreshPolicy'
 import {
+  applyExtraPreference,
+  isExtraRowVisible,
+  loadExtraRowOverride,
+  saveExtraRowOverride
+} from './extraUsagePreference'
+import {
   USAGE_GET_CHANNEL,
   USAGE_UPDATED_CHANNEL,
   USAGE_REFRESH_CHANNEL,
@@ -26,6 +32,19 @@ let pollTimer: NodeJS.Timeout | null = null
 let lastUsage: UsageState | null = null
 let updateAvailableVersion: string | null = null
 const quickRetryGate = new QuickRetryGate()
+let extraRowOverride: boolean | undefined
+
+const settingsPath = (): string => join(app.getPath('userData'), 'settings.json')
+
+function pushUsageToPopup(): void {
+  if (!lastUsage) return
+  popup?.webContents.send(USAGE_UPDATED_CHANNEL, applyExtraPreference(lastUsage, extraRowOverride))
+}
+
+function currentExtraRowVisible(): boolean {
+  const extra = lastUsage?.status === 'ok' ? lastUsage.usage.extraUsage : undefined
+  return isExtraRowVisible(extraRowOverride, extra)
+}
 
 async function poll(options?: { armQuickRetry?: boolean }): Promise<void> {
   if (!tray) return
@@ -50,7 +69,9 @@ async function poll(options?: { armQuickRetry?: boolean }): Promise<void> {
 
   if (options?.armQuickRetry) quickRetryGate.armForRegularPoll()
 
-  popup?.webContents.send(USAGE_UPDATED_CHANNEL, state)
+  pushUsageToPopup()
+  // The menu's checkbox mirrors the effective visibility, which depends on the data.
+  tray.setContextMenu(buildContextMenu())
 }
 
 function createPopup(): BrowserWindow {
@@ -130,6 +151,7 @@ function togglePopup(): void {
 
 function buildContextMenu(): Menu {
   const autostartEnabled = app.getLoginItemSettings().openAtLogin
+  const extraRowVisible = currentExtraRowVisible()
 
   return Menu.buildFromTemplate([
     ...(updateAvailableVersion
@@ -141,6 +163,19 @@ function buildContextMenu(): Menu {
     { label: 'Refresh now', click: () => void poll() },
     { label: 'Show/Hide', click: () => togglePopup() },
     { type: 'separator' },
+    {
+      label: 'Show extra usage',
+      type: 'checkbox',
+      checked: extraRowVisible,
+      click: () => {
+        extraRowOverride = !extraRowVisible
+        void saveExtraRowOverride(settingsPath(), extraRowOverride).catch((err) =>
+          log.warn('Saving settings failed:', err)
+        )
+        pushUsageToPopup()
+        tray?.setContextMenu(buildContextMenu())
+      }
+    },
     {
       label: `Start with ${process.platform === 'darwin' ? 'macOS' : 'Windows'}`,
       type: 'checkbox',
@@ -168,7 +203,8 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', () => showPopup())
 
   app.whenReady().then(async () => {
-    ipcMain.handle(USAGE_GET_CHANNEL, () => lastUsage)
+    extraRowOverride = await loadExtraRowOverride(settingsPath())
+    ipcMain.handle(USAGE_GET_CHANNEL, () => applyExtraPreference(lastUsage, extraRowOverride))
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
     ipcMain.on(POPUP_RESIZE_CHANNEL, (_event, height: unknown) => {
