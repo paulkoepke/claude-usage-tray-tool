@@ -7,6 +7,8 @@ import {
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   POPUP_RESIZE_CHANNEL,
+  UPDATE_READY_GET_CHANNEL,
+  UPDATE_READY_CHANNEL,
   type UsageState
 } from '../shared/types'
 
@@ -20,7 +22,13 @@ const api = {
   requestRefresh: (): void => ipcRenderer.send(USAGE_REFRESH_CHANNEL),
   closePopup: (): void => ipcRenderer.send(POPUP_CLOSE_CHANNEL),
   resizePopup: (height: number): void => ipcRenderer.send(POPUP_RESIZE_CHANNEL, height),
-  getAppVersion: (): Promise<string> => ipcRenderer.invoke(APP_VERSION_GET_CHANNEL)
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke(APP_VERSION_GET_CHANNEL),
+  isUpdateReady: (): Promise<boolean> => ipcRenderer.invoke(UPDATE_READY_GET_CHANNEL),
+  onUpdateReady: (callback: () => void): (() => void) => {
+    const listener = (): void => callback()
+    ipcRenderer.on(UPDATE_READY_CHANNEL, listener)
+    return () => ipcRenderer.removeListener(UPDATE_READY_CHANNEL, listener)
+  }
 }
 
 contextBridge.exposeInMainWorld('claudeUsage', api)

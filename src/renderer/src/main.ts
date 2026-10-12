@@ -41,8 +41,11 @@ app.innerHTML = `
       <div class="metric-sub">-- / --</div>
     </div>
     <div class="term-footer">
-      <span class="term-version" id="version"></span>
-      <span class="term-status" id="status">loading…</span>
+      <div class="update-banner" id="update-banner" hidden>Update available! Restart to install.</div>
+      <div class="term-footer-row">
+        <span class="term-version" id="version"></span>
+        <span class="term-status" id="status">loading…</span>
+      </div>
     </div>
   </div>
 `
@@ -64,6 +67,11 @@ function applyState(state: UsageState): void {
   flashSynced()
 }
 
+function showUpdateBanner(): void {
+  const banner = document.getElementById('update-banner')
+  if (banner) banner.hidden = false
+}
+
 async function init(): Promise<void> {
   try {
     const version = await window.claudeUsage.getAppVersion()
@@ -71,6 +79,13 @@ async function init(): Promise<void> {
     if (versionEl) versionEl.textContent = `v${version}`
   } catch {
     // Version display is non-critical — ignore failures.
+  }
+
+  try {
+    // The update may have finished downloading before this window loaded.
+    if (await window.claudeUsage.isUpdateReady()) showUpdateBanner()
+  } catch {
+    // Non-critical — ignore failures.
   }
 
   try {
@@ -97,5 +112,7 @@ new ResizeObserver(() => {
 document.getElementById('close-btn')?.addEventListener('click', () => {
   window.claudeUsage.closePopup()
 })
+
+window.claudeUsage.onUpdateReady(showUpdateBanner)
 
 void init()

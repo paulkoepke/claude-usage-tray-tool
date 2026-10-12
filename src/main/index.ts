@@ -18,6 +18,8 @@ import {
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   POPUP_RESIZE_CHANNEL,
+  UPDATE_READY_GET_CHANNEL,
+  UPDATE_READY_CHANNEL,
   POLL_INTERVAL_MS,
   type UsageState
 } from '../shared/types'
@@ -31,6 +33,7 @@ let popup: BrowserWindow | null = null
 let pollTimer: NodeJS.Timeout | null = null
 let lastUsage: UsageState | null = null
 let updateAvailableVersion: string | null = null
+let updateDownloaded = false
 const quickRetryGate = new QuickRetryGate()
 let extraRowOverride: boolean | undefined
 
@@ -206,6 +209,7 @@ if (!app.requestSingleInstanceLock()) {
     extraRowOverride = await loadExtraRowOverride(settingsPath())
     ipcMain.handle(USAGE_GET_CHANNEL, () => applyExtraPreference(lastUsage, extraRowOverride))
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
+    ipcMain.handle(UPDATE_READY_GET_CHANNEL, () => updateDownloaded)
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
     ipcMain.on(POPUP_RESIZE_CHANNEL, (_event, height: unknown) => {
       if (!popup || typeof height !== 'number' || !Number.isFinite(height) || height <= 0) return
@@ -267,6 +271,8 @@ if (!app.requestSingleInstanceLock()) {
 
       autoUpdater.on('update-downloaded', (info) => {
         log.info(`Update downloaded: ${info.version}, will install on quit`)
+        updateDownloaded = true
+        popup?.webContents.send(UPDATE_READY_CHANNEL)
       })
 
       autoUpdater.checkForUpdatesAndNotify().catch((err) => {
