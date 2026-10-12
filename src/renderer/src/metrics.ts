@@ -90,6 +90,8 @@ export function renderMetric(groupId: MetricGroupId, data: UsageWindow): void {
   }
 
   resetTimestamps[groupId] = data.resetsAt
+  const sub = group.querySelector<HTMLElement>('.metric-sub')
+  if (sub) sub.title = new Date(data.resetsAt).toLocaleString()
   updateCountdown(groupId)
 }
 
