@@ -73,7 +73,7 @@ reinstall (drag the new `.app` over the old one) to update.
 ## Features
 
 - **Tray icon**: shows usage as a ring/bar (32x32), color-coded by
-  threshold — green (<50%), yellow (50–80%), red (>80%)
+  threshold — green (<60%), yellow (60–80%), red (>80%)
 - **Popup window**: click the tray icon to open a frameless, draggable
   window with two progress bars (5h / 7d), percentage, and reset time
 - **Context menu** (right-click): "Refresh now", "Show/Hide", "Start with

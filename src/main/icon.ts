@@ -8,7 +8,7 @@ const MASCOT_SIZE = 18
 
 function colorForPercent(percent: number): string {
   if (percent > 80) return '#e5484d'
-  if (percent >= 50) return '#f5a623'
+  if (percent >= 60) return '#f5a623'
   return '#30a46c'
 }
 

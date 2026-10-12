@@ -20,7 +20,7 @@ const resetTimestamps: Record<MetricGroupId, string | null> = {
 
 function levelClass(percent: number): string {
   if (percent > 80) return 'level-high'
-  if (percent >= 50) return 'level-mid'
+  if (percent >= 60) return 'level-mid'
   return 'level-low'
 }
 
