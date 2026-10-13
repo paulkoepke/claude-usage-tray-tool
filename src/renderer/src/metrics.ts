@@ -75,6 +75,21 @@ export function updateMetricCountdowns(): void {
   updateCountdown('metric-7d')
 }
 
+// Weekday, date and time in the user's locale and local time zone.
+function formatResetTitle(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  }).format(date)
+}
+
 export function renderMetric(groupId: MetricGroupId, data: UsageWindow): void {
   const group = document.getElementById(groupId)
   if (!group) return
@@ -91,7 +106,7 @@ export function renderMetric(groupId: MetricGroupId, data: UsageWindow): void {
 
   resetTimestamps[groupId] = data.resetsAt
   const sub = group.querySelector<HTMLElement>('.metric-sub')
-  if (sub) sub.title = new Date(data.resetsAt).toLocaleString()
+  if (sub) sub.title = formatResetTitle(data.resetsAt)
   updateCountdown(groupId)
 }
 
