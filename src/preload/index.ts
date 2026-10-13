@@ -7,6 +7,7 @@ import {
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
   POPUP_RESIZE_CHANNEL,
+  LOCALE_GET_CHANNEL,
   UPDATE_READY_GET_CHANNEL,
   UPDATE_READY_CHANNEL,
   type UsageState
@@ -23,6 +24,7 @@ const api = {
   closePopup: (): void => ipcRenderer.send(POPUP_CLOSE_CHANNEL),
   resizePopup: (height: number): void => ipcRenderer.send(POPUP_RESIZE_CHANNEL, height),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke(APP_VERSION_GET_CHANNEL),
+  getLocale: (): Promise<string> => ipcRenderer.invoke(LOCALE_GET_CHANNEL),
   isUpdateReady: (): Promise<boolean> => ipcRenderer.invoke(UPDATE_READY_GET_CHANNEL),
   onUpdateReady: (callback: () => void): (() => void) => {
     const listener = (): void => callback()

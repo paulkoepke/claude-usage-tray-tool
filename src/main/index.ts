@@ -17,6 +17,7 @@ import {
   USAGE_REFRESH_CHANNEL,
   POPUP_CLOSE_CHANNEL,
   APP_VERSION_GET_CHANNEL,
+  LOCALE_GET_CHANNEL,
   POPUP_RESIZE_CHANNEL,
   UPDATE_READY_GET_CHANNEL,
   UPDATE_READY_CHANNEL,
@@ -209,6 +210,8 @@ if (!app.requestSingleInstanceLock()) {
     extraRowOverride = await loadExtraRowOverride(settingsPath())
     ipcMain.handle(USAGE_GET_CHANNEL, () => applyExtraPreference(lastUsage, extraRowOverride))
     ipcMain.handle(APP_VERSION_GET_CHANNEL, () => app.getVersion())
+    // OS locale, not Chromium's: packaged builds only ship the en-US locale pack.
+    ipcMain.handle(LOCALE_GET_CHANNEL, () => app.getSystemLocale())
     ipcMain.handle(UPDATE_READY_GET_CHANNEL, () => updateDownloaded)
     ipcMain.on(POPUP_CLOSE_CHANNEL, () => popup?.hide())
     ipcMain.on(POPUP_RESIZE_CHANNEL, (_event, height: unknown) => {

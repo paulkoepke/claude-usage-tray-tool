@@ -75,11 +75,19 @@ export function updateMetricCountdowns(): void {
   updateCountdown('metric-7d')
 }
 
+// Packaged builds only ship the en-US Chromium locale, so the default locale is
+// always English there — the main process hands us the OS locale instead.
+let locale: string | undefined
+
+export function setLocale(value: string): void {
+  locale = value || undefined
+}
+
 // Weekday, date and time in the user's locale and local time zone.
 function formatResetTitle(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     weekday: 'long',
     day: '2-digit',
     month: '2-digit',

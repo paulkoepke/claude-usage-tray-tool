@@ -1,7 +1,7 @@
 import './style.css'
 import type { UsageState } from '../../shared/types'
 import { setStatus, updateRefreshStatus, flashSynced, scheduleNextRefresh } from './statusLine'
-import { renderMetric, renderExtraMetric, updateMetricCountdowns, setMetricsStale } from './metrics'
+import { renderMetric, renderExtraMetric, updateMetricCountdowns, setMetricsStale, setLocale } from './metrics'
 import { MASCOT, updateMascot } from './mascot'
 
 const app = document.getElementById('app')
@@ -73,6 +73,12 @@ function showUpdateBanner(): void {
 }
 
 async function init(): Promise<void> {
+  try {
+    setLocale(await window.claudeUsage.getLocale())
+  } catch {
+    // Falls back to the default locale — ignore failures.
+  }
+
   try {
     const version = await window.claudeUsage.getAppVersion()
     const versionEl = document.getElementById('version')

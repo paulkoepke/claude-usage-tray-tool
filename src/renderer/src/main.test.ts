@@ -49,6 +49,7 @@ async function loadApp(
     closePopup: vi.fn(),
     resizePopup: vi.fn(),
     getAppVersion: vi.fn().mockResolvedValue(options?.version ?? '1.0.0'),
+    getLocale: vi.fn().mockResolvedValue('en-US'),
     isUpdateReady: vi.fn().mockResolvedValue(false),
     onUpdateReady: vi.fn(() => () => {})
   }
